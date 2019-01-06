@@ -10,11 +10,11 @@ const replyMessage = (dispatch, output) => dispatch({
 });
 
 export default message => (dispatch, getState) => {
-  let tmp = null;
+  let code = null;
   try {
-    tmp = safeEval(getState().activeTab.code, window);
+    code = safeEval(getState().activeTab.code, window);
   } catch (e) {
-    tmp = e.message;
+    code = e.message;
   }
   dispatch({
     type: GET_REPLY,
@@ -24,13 +24,15 @@ export default message => (dispatch, getState) => {
     }
   });
 
-  const code = typeof tmp === 'string' ? tmp : tmp(message);
-
-  code
-    .then(output => {
-      replyMessage(dispatch, output);
-    })
-    .catch(error => {
-      replyMessage(dispatch, error.message);
-    });
+  if (typeof code === 'string') {
+    replyMessage(dispatch, code);
+  } else {
+    code(message)
+      .then(output => {
+        replyMessage(dispatch, output);
+      })
+      .catch(error => {
+        replyMessage(dispatch, error.message);
+      });
+  }
 };
